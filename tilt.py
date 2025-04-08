@@ -12,4 +12,11 @@ class Tilt:
         self.__conn = Connection(self.__options.data_src, self.__options.program_id)
 
     def run(self):
-        asyncio.run(self.__conn.run())
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+        if loop and loop.is_running():
+            asyncio.ensure_future(self.__conn.run())
+        else:
+            asyncio.run(self.__conn.run())
