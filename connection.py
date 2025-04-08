@@ -40,8 +40,9 @@ class Connection:
                 break
             for line in batch:
                 try:
-                    json_line = json.loads({'program_id': self.__program_id, 'data': line})
-                    async with session.post(API_DISPATCH_URL, json=json_line):
+                    json_line = json.loads(line)
+                    payload = {'program_id': self.__program_id, 'data': json_line}
+                    async with session.post(API_DISPATCH_URL, json=payload):
                         continue
                 except Exception as e:
                     eprint(f"Worker {name} error: {e}")
