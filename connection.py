@@ -14,6 +14,8 @@ class Connection:
 
     async def read_batches(self) -> AsyncGenerator[list[str], None]:
         loop = asyncio.get_running_loop()
+        if not self.is_textual(self.filepath):
+            eprint("File is binary")
         with open(self.filepath, "r") as f:
             batch = []
             while True:
@@ -58,3 +60,18 @@ class Connection:
             await self.queue.join()
             for task in tasks:
                 await task
+
+    def is_textual(self, filepath: str):
+        try:
+            with open(filepath, 'rb') as file:
+                block = file.read(8)  # read first 8 bytes
+                if b'\0' in block:
+                    return False
+                try:
+                    block.decode('utf-8')
+                    return True
+                except UnicodeDecodeError:
+                    return False
+        except Exception as e:
+            eprint(f"Error reading file: {e}")
+            return False
