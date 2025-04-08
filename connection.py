@@ -1,3 +1,4 @@
+import json
 import asyncio
 import aiohttp
 from typing import AsyncGenerator
@@ -39,7 +40,8 @@ class Connection:
                 break
             for line in batch:
                 try:
-                    async with session.post(API_DISPATCH_URL, json={'program_id': self.__program_id, 'data': line.encode('utf-8')}):
+                    json_line = json.loads({'program_id': self.__program_id, 'data': line})
+                    async with session.post(API_DISPATCH_URL, json=json_line):
                         continue
                 except Exception as e:
                     eprint(f"Worker {name} error: {e}")
