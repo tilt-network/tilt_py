@@ -1,12 +1,11 @@
 import os
-import sqlite3
 
 
 class Options:
 
-    def __init__(self, api_key=None, **kwargs):
-        self.__data_src = ""
-        self.__api_url = ""
+    def __init__(self, data_src: str, program_id: str, api_key=None, **kwargs):
+        self.__data_src = data_src
+        self.__program_id = program_id
         if not api_key:
             self.__api_key = os.environ.get('TILT_API_KEY')
         self.__api_key = api_key
@@ -19,7 +18,6 @@ class Options:
     def api_url(self):
         return self.__data_src
 
-    def validate_program(self, program_name):
-        conn = sqlite3.Connection("~/tilt/tilt.db")
-        cur = conn.cursor()
-        return cur.execute('SELECT program_id FROM programs WHERE name = ?', program_name).fetchone()
+    @property
+    def program_id(self):
+        return self.__program_id

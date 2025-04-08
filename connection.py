@@ -3,6 +3,8 @@ import aiohttp
 from typing import AsyncGenerator
 from utils import eprint
 
+API_DISPATCH_URL = "http://localhost:3000/dispatch"
+
 
 class Connection:
     def __init__(self, filepath: str, program_id: str, batch_size: int = 20, concurrency: int = 10):
@@ -37,7 +39,7 @@ class Connection:
                 break
             for line in batch:
                 try:
-                    async with session.post(self.__api_url, data=line.encode('utf-8')):
+                    async with session.post(API_DISPATCH_URL, json={'program_id': self.__program_id, 'data': line.encode('utf-8')}):
                         continue
                 except Exception as e:
                     eprint(f"Worker {name} error: {e}")
