@@ -3,8 +3,7 @@ import asyncio
 import aiohttp
 from typing import AsyncGenerator
 from utils import eprint
-
-API_DISPATCH_URL = "http://localhost:3000/dispatch"
+from endpoints import dispatch_endpoint
 
 
 class Connection:
@@ -42,7 +41,7 @@ class Connection:
                 try:
                     json_line = json.loads(line)
                     payload = {'program_id': self.__program_id, 'data': json_line}
-                    async with session.post(API_DISPATCH_URL, json=payload):
+                    async with session.post(dispatch_endpoint(), json=payload):
                         continue
                 except Exception as e:
                     eprint(f"Worker {name} error: {e}")
