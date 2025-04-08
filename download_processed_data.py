@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 import os
 from endpoints import download_processed_data_endpoint
+from log import Log
 
 
 class DownloadProcessedData:
@@ -23,6 +24,6 @@ class DownloadProcessedData:
                 with open(self.__dest_path, "wb") as f:
                     async for chunk in resp.content.iter_chunked(self.__chunk_size):
                         f.write(chunk)
-                        print(f"Wrote {len(chunk)} bytes...")
+                        Log.success(f"Wrote {len(chunk)} bytes...")
 
-        print(f"Download complete: {self.__dest_path}")
+        Log.success(f"Download complete: {self.__dest_path}")

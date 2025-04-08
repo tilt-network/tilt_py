@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 from typing import Optional
 from endpoints import status_polling_endpoint
-from utils import eprint
+from log import Log
 
 
 class TaskStatusPolling:
@@ -29,9 +29,9 @@ class TaskStatusPolling:
         try:
             async with self._session.get(status_polling_endpoint(self.__task_id)) as resp:
                 data = await resp.json()
-                print(f"[{resp.status}] Response: {data}")
+                Log.error(f"[{resp.status}] Response: {data}")
         except Exception as e:
-            eprint(f"Error checking status: {e}")
+            Log.error(f"Error checking status: {e}")
 
     def start(self):
         if self._task is None or self._task.done():

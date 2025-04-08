@@ -1,7 +1,7 @@
 import aiohttp
 import asyncio
 from endpoints import sse_endpoint
-from utils import eprint
+from log import Log
 
 
 class TaskStatusStreaming:
@@ -30,12 +30,12 @@ class TaskStatusStreaming:
                         data = decoded.removeprefix("data:").strip()
                         self.handle_event(data)
         except Exception as e:
-            eprint(f"SSE error: {e}")
+            Log.error(f"SSE error: {e}")
         finally:
             await self._session.close()
 
     def handle_event(self, data: str):
-        print(f"Data status: {data}")
+        Log.info(f"Data status: {data}")
 
     def start(self):
         if self._task is None or self._task.done():
