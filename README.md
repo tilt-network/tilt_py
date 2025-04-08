@@ -43,7 +43,7 @@ pip install "git+ssh://git@github.com:tilt-network/tilt_py.git@dev"
 from tilt import Tilt, Options
 
 options = Options(api_key="your-tilt-api-key")
-tilt = Tilt(program_id="my_program_id", options=options)
+tilt = Til(data_src='filename.txt', program_id="my_program_id", options=options)
 tilt.run()
 ```
 

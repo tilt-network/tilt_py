@@ -3,7 +3,7 @@ import os
 
 class Options:
 
-    def __init__(self, data_src: str, program_id: str, api_key=None, **kwargs):
+    def __init__(self, api_key: str, data_src: str, program_id: str, **kwargs):
         self.__data_src = data_src
         self.__program_id = program_id
         if not api_key:
