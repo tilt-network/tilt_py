@@ -35,7 +35,7 @@ class TaskStatusStreaming:
             await self._session.close()
 
     def handle_event(self, data: str):
-        Log.info(f"Data status: {data}")
+        return data
 
     def start(self):
         if self._task is None or self._task.done():

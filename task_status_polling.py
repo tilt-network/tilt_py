@@ -1,6 +1,6 @@
 import asyncio
 import aiohttp
-from typing import Optional
+from typing import Optional, AsyncGenerator
 from endpoints import status_polling_endpoint
 from log import Log
 
@@ -25,11 +25,11 @@ class TaskStatusPolling:
         finally:
             await self._session.close()
 
-    async def check_status(self):
+    async def check_status(self) -> AsyncGenerator:
         try:
             async with self._session.get(status_polling_endpoint(self.__task_id)) as resp:
                 data = await resp.json()
-                Log.error(f"[{resp.status}] Response: {data}")
+                yield data
         except Exception as e:
             Log.error(f"Error checking status: {e}")
 
