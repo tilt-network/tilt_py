@@ -13,10 +13,13 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 py-modules = [
     "tilt",
-    "options",
     "connection",
     "endpoints",
     "log",
+    "options",
+    "processed_data",
+    "task_status_polling",
+    "task_status_streaming",
     "utils",
     "__init__",
 ]
