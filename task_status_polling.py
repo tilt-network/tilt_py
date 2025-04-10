@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 from typing import Optional, AsyncGenerator
 from endpoints import status_polling_endpoint
-from tilt_log import TiltLog
+from log import TiltLog
 
 
 class TaskStatusPolling:

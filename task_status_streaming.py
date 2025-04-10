@@ -1,7 +1,7 @@
 import aiohttp
 import asyncio
 from endpoints import sse_endpoint
-from tilt_log import TiltLog
+from log import TiltLog
 
 
 class TaskStatusStreaming:
@@ -48,4 +48,3 @@ class TaskStatusStreaming:
         except RuntimeError:
             # No event loop running, safe to use asyncio.run
             return asyncio.run(self._start_async())
-

@@ -2,7 +2,7 @@ import json
 import asyncio
 import aiohttp
 from typing import AsyncGenerator
-from tilt_log import TiltLog
+from log import TiltLog
 from endpoints import dispatch_endpoint
 
 

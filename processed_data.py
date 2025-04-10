@@ -2,7 +2,7 @@ import aiohttp
 import asyncio
 import os
 from endpoints import download_processed_data_endpoint
-from tilt_log import TiltLog
+from log import TiltLog
 
 
 class ProcessedData:
