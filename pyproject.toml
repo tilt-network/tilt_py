@@ -18,6 +18,7 @@ py-modules = [
     "log",
     "options",
     "processed_data",
+    "typing_extensions",
     "task_status_polling",
     "task_status_streaming",
     "utils",
