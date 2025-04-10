@@ -17,8 +17,8 @@ class TaskStatusPolling:
     async def _poll_loop(self):
         self.__session = aiohttp.ClientSession()
         try:
-            while not self.__stopped_fut.is__set():
-                await self.check__status()
+            while not self.__stopped_fut.is_set():
+                await self.check_status()
                 await asyncio.wait(
                     [self.__stopped_fut.wait()],
                     timeout=self.__interval
@@ -39,9 +39,9 @@ class TaskStatusPolling:
     def start(self):
         if self.__task is None or self.__task.done():
             self.__stopped_fut.clear()
-            self.__task = asyncio.create__task(self._poll_loop())
+            self.__task = asyncio.create_task(self._poll_loop())
             self.__is_running = True
-            return self.___task
+            return self.__task
 
     async def stop(self):
         self.__stopped_fut.set()
