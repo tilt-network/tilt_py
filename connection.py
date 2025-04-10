@@ -2,7 +2,7 @@ import json
 import asyncio
 import aiohttp
 from typing import AsyncGenerator
-from log import Log
+from tilt_log import TiltLog
 from endpoints import dispatch_endpoint
 
 
@@ -17,7 +17,7 @@ class Connection:
     async def read_batches(self) -> AsyncGenerator[list[str], None]:
         loop = asyncio.get_running_loop()
         if not self.is_textual(self.__filepath):
-            Log.error("File is binary")
+            TiltLog.error("File is binary")
         with open(self.__filepath, "r") as f:
             batch = []
             while True:
@@ -44,7 +44,7 @@ class Connection:
                     async with session.post(dispatch_endpoint(), json=payload):
                         continue
                 except Exception as e:
-                    Log.error(f"Worker {name} error: {e}")
+                    TiltLog.error(f"Worker {name} error: {e}")
             self.__queue.task_done()
 
     async def run(self):
@@ -77,5 +77,5 @@ class Connection:
                 except UnicodeDecodeError:
                     return False
         except Exception as e:
-            Log.error(f"Error reading file: {e}")
+            TiltLog.error(f"Error reading file: {e}")
             return False

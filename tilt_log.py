@@ -2,22 +2,22 @@ import os
 import sys
 
 
-class Log:
+class TiltLog:
     debug_mode = os.environ.get("DEBUG") == "1"
 
     @staticmethod
     def success(msg: str):
-        if Log.debug_mode:
+        if TiltLog.debug_mode:
             print(f"[✓] {msg}", file=sys.stdout)
 
     @staticmethod
     def warning(msg: str):
-        if Log.debug_mode:
+        if TiltLog.debug_mode:
             print(f"[!] {msg}", file=sys.stdout)
 
     @staticmethod
     def info(msg: str):
-        if Log.debug_mode:
+        if TiltLog.debug_mode:
             print(f"[-] {msg}", file=sys.stdout)
 
     @staticmethod

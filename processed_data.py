@@ -2,7 +2,7 @@ import aiohttp
 import asyncio
 import os
 from endpoints import download_processed_data_endpoint
-from log import Log
+from tilt_log import TiltLog
 
 
 class ProcessedData:
@@ -29,7 +29,7 @@ class ProcessedData:
                 if resp.status != 200:
                     raise Exception(f"Download failed: {resp.status}")
                 data = await resp.read()
-                Log.success(f"Downloaded {len(data)} bytes")
+                TiltLog.success(f"Downloaded {len(data)} bytes")
                 return data
 
     async def __download_to_file(self):
@@ -42,7 +42,7 @@ class ProcessedData:
                 with open(self.__dest_path, "wb") as f:
                     async for chunk in resp.content.iter_chunked(self.__chunk_size):
                         f.write(chunk)
-                        Log.success(f"Wrote {len(chunk)} bytes...")
+                        TiltLog.success(f"Wrote {len(chunk)} bytes...")
 
-        Log.success(f"Download complete: {self.__dest_path}")
+        TiltLog.success(f"Download complete: {self.__dest_path}")
         return self.__dest_path

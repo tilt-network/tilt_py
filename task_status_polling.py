@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 from typing import Optional, AsyncGenerator
 from endpoints import status_polling_endpoint
-from log import Log
+from tilt_log import TiltLog
 
 
 class TaskStatusPolling:
@@ -34,7 +34,7 @@ class TaskStatusPolling:
                 data = await resp.json()
                 yield data
         except Exception as e:
-            Log.error(f"Error checking status: {e}")
+            TiltLog.error(f"Error checking status: {e}")
 
     def start(self):
         if self.__task is None or self.__task.done():

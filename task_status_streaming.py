@@ -1,7 +1,7 @@
 import aiohttp
 import asyncio
 from endpoints import sse_endpoint
-from log import Log
+from tilt_log import TiltLog
 
 
 class TaskStatusStreaming:
@@ -31,7 +31,7 @@ class TaskStatusStreaming:
                         self.__stopped.set()
                         break
         except Exception as e:
-            Log.error(f"SSE error: {e}")
+            TiltLog.error(f"SSE error: {e}")
         finally:
             await self.__session.close()
 
