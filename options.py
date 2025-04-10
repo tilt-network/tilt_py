@@ -1,5 +1,5 @@
 import os
-from typing_extensions import Optional
+from typing import Optional
 
 
 class Options:
