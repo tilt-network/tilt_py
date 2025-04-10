@@ -1,9 +1,10 @@
 import os
+from typing_extensions import Optional
 
 
 class Options:
 
-    def __init__(self, api_key: str, data_src: str, program_id: str, **kwargs):
+    def __init__(self, api_key: Optional[str], data_src: Optional[str], program_id: Optional[str], **kwargs):
         self.__data_src = data_src
         self.__program_id = program_id
         if not api_key:
