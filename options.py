@@ -1,10 +1,10 @@
 import os
-from typing import Optional
+from source_handler import SourceHandler
 
 
 class Options:
 
-    def __init__(self, api_key: Optional[str], data_src: Optional[str] = None, program_id: Optional[str] = None, **kwargs):
+    def __init__(self, api_key: str, data_src: SourceHandler = None, program_id: str = None, **kwargs):
         self.__data_src = data_src
         self.__program_id = program_id
         if not api_key:
