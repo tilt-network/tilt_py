@@ -1,9 +1,9 @@
 import json
 import asyncio
 import aiohttp
-from typing import AsyncGenerator
 from log import TiltLog
 from endpoints import dispatch_endpoint
+from file_handler import TextFileHandler, BinaryFileHandler
 
 
 class Connection:
@@ -13,23 +13,6 @@ class Connection:
         self.__batch_size = batch_size
         self.__concurrency = concurrency
         self.__queue = asyncio.Queue(maxsize=concurrency * 2)
-
-    async def read_batches(self) -> AsyncGenerator[list[str], None]:
-        loop = asyncio.get_running_loop()
-        if not self.is_textual(self.__filepath):
-            TiltLog.error("File is binary")
-        with open(self.__filepath, "r") as f:
-            batch = []
-            while True:
-                line = await loop.run_in_executor(None, f.readline)
-                if not line:
-                    if batch:
-                        yield batch
-                    break
-                batch.append(line.rstrip('\n'))
-                if len(batch) == self.__batch_size:
-                    yield batch
-                    batch = []
 
     async def worker(self, name: int, session: aiohttp.ClientSession):
         while True:
@@ -54,8 +37,9 @@ class Connection:
                 for i in range(self.__concurrency)
             ]
 
-            async for batch in self.read_batches():
-                await self.__queue.put(batch)
+            tfh = TextFileHandler(self.__filepath)
+            for batch in tfh.read_batches():
+                self.__queue.put(batch)
 
             # cleanup workers
             for _ in range(self.__concurrency):
