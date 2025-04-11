@@ -6,15 +6,11 @@ from typing import Optional
 
 class Tilt:
 
-    def __init__(self, data_src: Optional[str] = None, program_id: Optional[str] = None, options: Optional[Options] = None):
-        if options is not None:
-            self.__options = options
-        else:
-            self.__options = Options(None, data_src, program_id)
-        
+    def __init__(self, options: Optional[Options]):
+        self.__options = options
         if self.__options.data_src is None or self.__options.program_id is None:
             raise ValueError("Both data_src and program_id must be provided either directly or through options")
-            
+
         self.__conn = Connection(self.__options.data_src, self.__options.program_id)
 
     def run(self):
