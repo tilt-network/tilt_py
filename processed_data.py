@@ -3,6 +3,7 @@ import asyncio
 import os
 from endpoints import download_processed_data_endpoint
 from log import TiltLog
+from source_handler import BinarySourceHandler
 
 
 class ProcessedData:
@@ -39,10 +40,15 @@ class ProcessedData:
             async with session.get(download_processed_data_endpoint(self.__program_id)) as resp:
                 if resp.status != 200:
                     raise Exception(f"Download failed: {resp.status}")
-                with open(self.__dest_path, "wb") as f:
-                    async for chunk in resp.content.iter_chunked(self.__chunk_size):
-                        f.write(chunk)
-                        TiltLog.success(f"Wrote {len(chunk)} bytes...")
+
+                chunks = []
+                async for chunk in resp.content.iter_chunked(self.__chunk_size):
+                    chunks.append(chunk)
+                    TiltLog.success(f"Fetched {len(chunk)} bytes...")
+
+        # Delegate to BinarySourceHandler to write
+        handler = BinarySourceHandler(self.__dest_path, chunk_size=self.__chunk_size)
+        await handler.write(chunks, self.__dest_path)
 
         TiltLog.success(f"Download complete: {self.__dest_path}")
         return self.__dest_path
