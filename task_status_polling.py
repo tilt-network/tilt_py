@@ -1,54 +1,39 @@
 import asyncio
 import aiohttp
-from typing import Optional, AsyncGenerator
+import threading
+from typing import Callable, Optional
 from endpoints import status_polling_endpoint
-from log import TiltLog
 
 
 class TaskStatusPolling:
-    def __init__(self, program_id, interval: int = 15):
+    def __init__(self, program_id: str, interval: int = 15, callback: Optional[Callable[[str], None]] = None):
+        self.__url = status_polling_endpoint(program_id)
         self.__interval = interval
-        self.__program_id = program_id
-        self.__task: Optional[asyncio.Task] = None
-        self.__session: Optional[aiohttp.ClientSession] = None
-        self.__stopped_fut = asyncio.Event()
-        self.__is_running = False
-
-    async def _poll_loop(self):
-        self.__session = aiohttp.ClientSession()
-        try:
-            while not self.__stopped_fut.is_set():
-                await self.check_status()
-                await asyncio.wait(
-                    [self.__stopped_fut.wait()],
-                    timeout=self.__interval
-                )
-        finally:
-            await self.__session.close()
-
-    async def check_status(self) -> AsyncGenerator:
-        if not self.is_running:
-            raise Exception('Status poll is not running')
-        try:
-            async with self.__session.get(status_polling_endpoint(self.__program_id)) as resp:
-                data = await resp.json()
-                yield data
-        except Exception as e:
-            TiltLog.error(f"Error checking status: {e}")
+        self.__callback = callback
+        self.__stop_event = threading.Event()
+        self.__thread = threading.Thread(target=self._run_loop, daemon=True)
 
     def start(self):
-        if self.__task is None or self.__task.done():
-            self.__stopped_fut.clear()
-            self.__task = asyncio.create_task(self._poll_loop())
-            self.__is_running = True
-            return self.__task
+        if not self.__thread.is_alive():
+            self.__thread.start()
 
-    async def stop(self):
-        self.__stopped_fut.set()
-        if self.__task:
-            await self.__task
-        self.__is_running = False
+    def stop(self):
+        self.__stop_event.set()
 
-    @property
-    def is_running(self):
-        return self.__is_running
+    def _run_loop(self):
+        asyncio.run(self._poll_loop())
+
+    async def _poll_loop(self):
+        async with aiohttp.ClientSession() as session:
+            while not self.__stop_event.is_set():
+                status = await self._check_status(session)
+                if self.__callback:
+                    self.__callback(status)
+                await asyncio.sleep(self.__interval)
+
+    async def _check_status(self, session: aiohttp.ClientSession) -> str:
+        try:
+            async with session.get(self.__url) as resp:
+                return await resp.text()
+        except Exception as e:
+            return f"error: {e}"
