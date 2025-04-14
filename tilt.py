@@ -1,12 +1,11 @@
 from options import Options
 from connection import Connection
 import asyncio
-from typing import Optional
 
 
 class Tilt:
 
-    def __init__(self, options: Optional[Options]):
+    def __init__(self, options: Options):
         self.__options = options
         if self.__options.data_src is None or self.__options.program_id is None:
             raise ValueError("Both data_src and program_id must be provided either directly or through options")
