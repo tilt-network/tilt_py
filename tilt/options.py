@@ -7,9 +7,10 @@ class Options:
     def __init__(self, api_key: str, data_src: SourceHandler = None, program_id: str = None, **kwargs):
         self.__data_src = data_src
         self.__program_id = program_id
-        if not api_key:
+        if api_key is None:
             self.__api_key = os.environ.get('TILT_API_KEY')
-        self.__api_key = api_key
+        else:
+            self.__api_key = api_key
 
     @property
     def data_src(self):
@@ -22,3 +23,7 @@ class Options:
     @property
     def program_id(self):
         return self.__program_id
+
+    @property
+    def apikey(self):
+        return self.__api_key
