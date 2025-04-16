@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 import threading
-from tilt.typing import Callable, Optional
+from typing import Callable, Optional
 from tilt.endpoints import status_polling_endpoint
 
 
