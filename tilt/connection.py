@@ -1,4 +1,3 @@
-import json
 import asyncio
 import aiohttp
 from tilt.log import TiltLog
