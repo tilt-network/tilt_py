@@ -1,6 +1,8 @@
 import aiohttp
 import asyncio
 import os
+import json
+from sectioner import Chunk
 from tilt.endpoints import download_processed_data_endpoint
 from tilt.log import TiltLog
 from tilt.source_handler import BinarySourceHandler
@@ -41,10 +43,9 @@ class ProcessedData:
                 if resp.status != 200:
                     raise Exception(f"Download failed: {resp.status}")
 
-                chunks = []
-                async for chunk in resp.content.iter_chunked(self.__chunk_size):
-                    chunks.append(chunk)
-                    TiltLog.success(f"Fetched {len(chunk)} bytes...")
+                data = await resp.read()
+        chunk_dicts = json.loads(data)
+        chunks = [Chunk(index=chunk['index'], data=chunk['data']) for chunk in chunk_dicts]
 
         # Delegate to BinarySourceHandler to write
         handler = BinarySourceHandler(self.__dest_path, chunk_size=self.__chunk_size)

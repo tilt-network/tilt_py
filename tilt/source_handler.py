@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import aiofiles
 import asyncio
-from sectioner import reconstruct_file, deconstruct_file
+from sectioner import reconstruct_file, deconstruct_file, Chunk
 
 
 class SourceHandler(ABC):
@@ -30,6 +30,12 @@ class TextSourceHandler(SourceHandler):
             if batch:
                 yield batch
 
+    async def write(self, batches: list[list[str]]):
+        async with aiofiles.open(self.__filepath, 'w', encoding='utf-8') as f:
+            for batch in batches:
+                for line in batch:
+                    await f.write(line + '\n')
+
 
 class BinarySourceHandler(SourceHandler):
     def __init__(self, filepath: str, chunk_size: int = 1024, batch_size: int = 1):
@@ -41,7 +47,7 @@ class BinarySourceHandler(SourceHandler):
         for chunk in deconstruct_file(self.__filepath, self.__chunk_size):
             yield chunk
 
-    async def write(self, chunks, output_file):
+    async def write(self, chunks: list[Chunk], output_file):
         reconstruct_file(chunks, output_file)
 
 
