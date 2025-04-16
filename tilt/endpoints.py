@@ -1,4 +1,6 @@
-API_BASE_URL = "http://localhost:3000"
+import os
+
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:3000")
 
 
 def dispatch_endpoint():
