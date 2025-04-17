@@ -30,7 +30,7 @@ async def test_status_polling_calls_callback(httpserver, program_id):
 
     poller = TaskStatusPolling(program_id=program_id, interval=1, callback=callback)
     poller.start()
-    time.sleep(2.5)  # let it poll a couple of times
+    time.sleep(1.5)  # let it poll a couple of times
     poller.stop()
 
     assert len(statuses) >= 2
@@ -50,7 +50,7 @@ async def test_status_polling_handles_errors(httpserver, program_id):
 
     poller = TaskStatusPolling(program_id=program_id, interval=1, callback=callback)
     poller.start()
-    time.sleep(2.5)
+    time.sleep(1.5)
     poller.stop()
 
     assert len(statuses) >= 2
@@ -70,7 +70,7 @@ def test_status_polling_multiple_starts(httpserver, program_id):
     poller = TaskStatusPolling(program_id=program_id, interval=1, callback=callback)
     poller.start()
     poller.start()  # should not start a second thread
-    time.sleep(2)
+    time.sleep(1)
     poller.stop()
 
     assert len(statuses) >= 1
