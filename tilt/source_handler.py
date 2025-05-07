@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 import aiofiles
 import asyncio
 from sectioner import reconstruct_file, deconstruct_file, Chunk
+from sectioner import split_video as sectioner_split_video
+from sectioner import reconstruct_video as sectioner_reconstruct_video
 
 
 class SourceHandler(ABC):
@@ -75,3 +77,21 @@ class TcpHandler(SourceHandler):
         finally:
             writer.close()
             await writer.wait_closed()
+
+
+class VideoHandler(SourceHandler):
+    def __init__(self, filename: str = None, output_dir: str = None, input_dir: str = None, target_filename: str = None):
+        self.__filename = filename
+        self.__output_dir = output_dir
+        self.__input_dir = input_dir
+        self.__target_filename = target_filename
+
+    def split_video(self, filename, output_dir):
+        filename = filename or self.__filename
+        output_dir = output_dir or self.__output_dir
+        sectioner_split_video(filename, output_dir, None)
+
+    def reconstruct_video(self, input_dir, target_filename):
+        input_dir = input_dir or self.__input_dir
+        target_filename = target_filename or self.__target_filename
+        sectioner_reconstruct_video(input_dir, target_filename)
