@@ -3,7 +3,6 @@ import time
 from tilt.tilt import Tilt
 from tilt.options import Options
 from tilt.task_status_polling import TaskStatusPolling
-from tilt.task_status_streaming import TaskStatusStreaming
 from tilt.processed_data import ProcessedData
 from tilt.source_handler import TextSourceHandler
 
@@ -33,14 +32,6 @@ poller.start()
 time.sleep(2)  # Let it poll a few times
 poller.stop()
 
-
-# %% Cell 4
-"""
-Check status via data streaming
-"""
-stream = TaskStatusStreaming(program_id)
-result = stream.start()  # will keep a connection open and await a response
-print(f'RESULT ------- {result}')
 
 # %% Cell 5
 """

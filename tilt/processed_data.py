@@ -9,8 +9,8 @@ from tilt.source_handler import BinarySourceHandler
 
 
 class ProcessedData:
-    def __init__(self, program_id: str, dest_path: str = None, chunk_size: int = 1024 * 1024):
-        self.__program_id = program_id
+    def __init__(self, program_path: str, dest_path: str = None, chunk_size: int = 1024 * 1024):
+        self.__program_path = program_path
         self.__chunk_size = chunk_size
         self.__dest_path = dest_path
 
@@ -28,7 +28,7 @@ class ProcessedData:
 
     async def __fetch_bytes(self) -> bytes:
         async with aiohttp.ClientSession() as session:
-            async with session.get(download_processed_data_endpoint(self.__program_id)) as resp:
+            async with session.get(download_processed_data_endpoint(self.__program_path)) as resp:
                 if resp.status != 200:
                     raise Exception(f"Download failed: {resp.status}")
                 data = await resp.read()
@@ -39,7 +39,7 @@ class ProcessedData:
         os.makedirs(os.path.dirname(self.__dest_path), exist_ok=True)
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(download_processed_data_endpoint(self.__program_id)) as resp:
+            async with session.get(download_processed_data_endpoint(self.__program_path)) as resp:
                 if resp.status != 200:
                     raise Exception(f"Download failed: {resp.status}")
 
@@ -47,7 +47,6 @@ class ProcessedData:
         chunk_dicts = json.loads(data)
         chunks = [Chunk(index=chunk['index'], data=chunk['data']) for chunk in chunk_dicts]
 
-        # Delegate to BinarySourceHandler to write
         handler = BinarySourceHandler(self.__dest_path, chunk_size=self.__chunk_size)
         await handler.write(chunks, self.__dest_path)
 

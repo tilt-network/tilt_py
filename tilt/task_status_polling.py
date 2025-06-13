@@ -3,11 +3,13 @@ import aiohttp
 import threading
 from typing import Callable, Optional
 from tilt.endpoints import status_polling_endpoint
+from tilt.options import Options
 
 
 class TaskStatusPolling:
-    def __init__(self, program_id: str, interval: int = 15, callback: Optional[Callable[[str], None]] = None):
-        self.__url = status_polling_endpoint(program_id)
+    def __init__(self, task_id: str, options: Options, interval: int = 15, callback: Optional[Callable[[str], None]] = None):
+        self.__url = status_polling_endpoint(task_id)
+        self.__options = options
         self.__interval = interval
         self.__callback = callback
         self.__stop_event = threading.Event()
@@ -24,7 +26,8 @@ class TaskStatusPolling:
         asyncio.run(self._poll_loop())
 
     async def _poll_loop(self):
-        async with aiohttp.ClientSession() as session:
+        headers = {"Authorization": f"Bearer {self.__options.auth_token}"}
+        async with aiohttp.ClientSession(headers=headers) as session:
             while not self.__stop_event.is_set():
                 status = await self._check_status(session)
                 if self.__callback:

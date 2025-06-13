@@ -1,16 +1,13 @@
-import os
 from tilt.source_handler import SourceHandler
 
 
 class Options:
 
-    def __init__(self, api_key: str, data_src: SourceHandler = None, program_id: str = None, **kwargs):
+    def __init__(self, auth_token: str, data_src: SourceHandler, organization_id: str, program_id: str = None, **kwargs):
         self.__data_src = data_src
         self.__program_id = program_id
-        if api_key is None:
-            self.__api_key = os.environ.get('TILT_API_KEY')
-        else:
-            self.__api_key = api_key
+        self.__organization_id = organization_id
+        self.__auth_token = auth_token
 
     @property
     def data_src(self):
@@ -25,5 +22,9 @@ class Options:
         return self.__program_id
 
     @property
-    def apikey(self):
-        return self.__api_key
+    def auth_token(self):
+        return self.__auth_token
+
+    @property
+    def organization_id(self):
+        return self.__organization_id

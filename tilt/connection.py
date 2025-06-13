@@ -1,53 +1,71 @@
 import asyncio
 import aiohttp
+from pathlib import Path
+from tilt.endpoints import programs_endpoint, jobs_endpoint, tasks_endpoint
+from tilt.options import Options
 from tilt.log import TiltLog
-from tilt.endpoints import dispatch_endpoint
-from tilt.source_handler import SourceHandler
 
 
 class Connection:
-    def __init__(self, source: SourceHandler, program_id: str, concurrency: int = 10):
-        """
-        :param source: Any object with a `read_batches()` method that returns an iterable of batches.
-        :param program_id: Program identifier to include in payload.
-        :param concurrency: Number of concurrent workers.
-        """
-        self.__source = source
-        self.__program_id = program_id
-        self.__concurrency = concurrency
-        self.__queue = asyncio.Queue(maxsize=concurrency * 2)
+    def __init__(self, options: Options):
+        self.__options = options
 
-    async def worker(self, name: int, session: aiohttp.ClientSession):
-        while True:
-            batch = await self.__queue.get()
-            try:
-                if batch is None:
-                    break
-                for item in batch:
-                    try:
-                        payload = {'program_id': self.__program_id, 'data': item}
-                        print(payload)
-                        async with session.post(dispatch_endpoint(), json=payload) as resp:
-                            if resp.status != 200:
-                                TiltLog.error(f"Worker {name} got status {resp.status}")
-                    except Exception as e:
-                        TiltLog.error(f"Worker {name} error: {e}")
-            finally:
-                self.__queue.task_done()
+    async def upload_program(self, filepath: str, name: str = None, description: str = None):
+        url = programs_endpoint()
+        headers = {
+            "Authorization": f"Bearer {self.__options.auth_token}"
+        }
 
-    async def run(self):
-        async with aiohttp.ClientSession() as session:
-            tasks = [
-                asyncio.create_task(self.worker(i, session))
-                for i in range(self.__concurrency)
-            ]
+        file_data = Path(filepath).read_bytes()
 
-            async for batch in self.__source.read():
-                await self.__queue.put(batch)
+        form = aiohttp.FormData()
+        form.add_field("program", file_data,
+                       filename=Path(filepath).name,
+                       content_type="application/octet-stream")
+        form.add_field("organization_id", self.__options.organization_id)
+        form.add_field("name", name)
+        form.add_field("description", description)
 
-            for _ in range(self.__concurrency):
-                await self.__queue.put(None)
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(url, data=form) as resp:
+                if resp.status != 200:
+                    TiltLog.error(f"Error uploading program. Response status: {resp.status}")
 
-            await self.__queue.join()
-            for task in tasks:
-                await task
+    async def create_job(self, name: str = None, status: str = "pending"):
+        url = jobs_endpoint()
+
+        headers = {
+            "Authorization": f"Bearer {self.__options.auth_token}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "organization_id": self.__options.organization_id,
+            "name": name,
+            "status": status,
+            "total_tokens": 0
+        }
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(url, json=payload) as resp:
+                if resp.status != 200:
+                    TiltLog.error(f"Error uploading program. Response status: {resp.status}")
+
+    async def create_task(self, job_id: str, index: int, status: str = "pending"):
+        url = tasks_endpoint()
+
+        headers = {
+            "Authorization": f"Bearer {self.__options.auth_token}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "job_id": job_id,
+            "segment_index": index,
+            "status": status
+        }
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(url, json=payload) as resp:
+                if resp.status != 200:
+                    TiltLog.error(f"Error uploading program. Response status: {resp.status}")
