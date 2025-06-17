@@ -25,3 +25,11 @@ def jobs_endpoint():
 
 def tasks_endpoint():
     return f'{API_BASE_URL}/tasks'
+
+
+def sk_signing_endpoint():
+    return f'{API_BASE_URL}/sign_in/api_key'
+
+
+def run_task_endpoint():
+    return f'{API_BASE_URL}/tasks/run'
