@@ -33,37 +33,88 @@ class Tilt:
             loop.create_task(run())
 
     def create_job(self, name: Optional[str] = None, status: str = "pending") -> dict:
-        async def run():
+        async def run() -> dict:
             return await self.__conn.create_job(name, status)
 
         try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
             return asyncio.run(run())
-        else:
-            return loop.create_task(run())
+        except RuntimeError:
+            q: queue.Queue = queue.Queue()
+
+            def _runner():
+                try:
+                    new_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(new_loop)
+                    res = new_loop.run_until_complete(run())
+                    new_loop.close()
+                    q.put((True, res))
+                except Exception as e:
+                    q.put((False, e))
+
+            t = threading.Thread(target=_runner, daemon=True)
+            t.start()
+
+            success, payload = q.get()
+            if success:
+                return payload
+            else:
+                raise payload
 
     def create_task(self, job_id: str, index: int, status: str = "pending") -> dict:
-        async def run():
+        async def run() -> dict:
             return await self.__conn.create_task(job_id, index, status)
 
         try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
             return asyncio.run(run())
-        else:
-            return loop.create_task(run())
+        except RuntimeError:
+            q: queue.Queue = queue.Queue()
 
-    def run_task(self, task_id, data):
-        async def run():
-            return await self.__conn.create_task(task_id, data)
+            def _runner():
+                try:
+                    new_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(new_loop)
+                    res = new_loop.run_until_complete(run())
+                    new_loop.close()
+                    q.put((True, res))
+                except Exception as e:
+                    q.put((False, e))
+
+            t = threading.Thread(target=_runner, daemon=True)
+            t.start()
+
+            success, payload = q.get()
+            if success:
+                return payload
+            else:
+                raise payload
+
+    def run_task(self, task_id, data) -> dict:
+        async def run() -> dict:
+            return await self.__conn.run_task(task_id, data)
 
         try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
             return asyncio.run(run())
-        else:
-            return loop.create_task(run())
+        except RuntimeError:
+            q: queue.Queue = queue.Queue()
+
+            def _runner():
+                try:
+                    new_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(new_loop)
+                    res = new_loop.run_until_complete(run())
+                    new_loop.close()
+                    q.put((True, res))
+                except Exception as e:
+                    q.put((False, e))
+
+            t = threading.Thread(target=_runner, daemon=True)
+            t.start()
+
+            success, payload = q.get()
+            if success:
+                return payload
+            else:
+                raise payload
 
     def sk_sign_in(self, sk: str) -> dict:
         async def run() -> dict:

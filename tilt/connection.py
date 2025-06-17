@@ -78,7 +78,7 @@ class Connection:
                 response = await resp.json()
         return response
 
-    async def run_task(self, task_id: str, data):
+    async def run_task(self, task_id: str, data: bytes) -> dict:
             url = run_task_endpoint()
 
             headers = {
@@ -87,7 +87,7 @@ class Connection:
 
             form = aiohttp.FormData()
             form.add_field("task_id", task_id)
-            form.add_field("data", data, filename="data.json", content_type="application/json")
+            form.add_field("data", data, filename="data.dat")
 
             async with aiohttp.ClientSession(headers=headers) as session:
                 async with session.post(url, data=form) as resp:
