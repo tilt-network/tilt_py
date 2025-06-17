@@ -30,6 +30,8 @@ class Connection:
             async with session.post(url, data=form) as resp:
                 if resp.status != 200:
                     TiltLog.error(f"Error uploading program. Response status: {resp.status}")
+                response = await resp.json()
+        return response
 
     async def create_job(self, name: str = None, status: str = "pending"):
         url = jobs_endpoint()
@@ -48,8 +50,10 @@ class Connection:
 
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.post(url, json=payload) as resp:
-                if resp.status != 200:
+                if resp.status != 201:
                     TiltLog.error(f"Error uploading program. Response status: {resp.status}")
+                response = await resp.json()
+        return response
 
     async def create_task(self, job_id: str, index: int, status: str = "pending"):
         url = tasks_endpoint()
@@ -67,5 +71,7 @@ class Connection:
 
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.post(url, json=payload) as resp:
-                if resp.status != 200:
+                if resp.status != 201:
                     TiltLog.error(f"Error uploading program. Response status: {resp.status}")
+                response = await resp.json()
+        return response

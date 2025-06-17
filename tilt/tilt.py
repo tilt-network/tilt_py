@@ -13,31 +13,34 @@ class Tilt:
         self.__conn = Connection(self.__options)
 
     def upload_program(self, filepath: str, name: str = None, description: str = None):
+        async def run():
+            await self.__conn.upload_program(filepath, name, description)
+
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            loop = None
-        if loop and loop.is_running():
-            asyncio.ensure_future(self.__conn.upload_program(filepath, name, description))
+            asyncio.run(run())
         else:
-            asyncio.run(self.__conn.upload_program(filepath, name, description))
+            loop.create_task(run())
 
     def create_job(self, name: str = None, status: str = "pending"):
+        async def run():
+            return await self.__conn.create_job(name, status)
+
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            loop = None
-        if loop and loop.is_running():
-            asyncio.ensure_future(self.__conn.create_job(name, status))
+            return asyncio.run(run())
         else:
-            asyncio.run(self.__conn.create_job(name, status))
+            return loop.run_until_complete(run())
 
     def create_task(self, job_id: str, index: int, status: str = "pending"):
+        async def run():
+            await self.__conn.create_task(job_id, index, status)
+
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            loop = None
-        if loop and loop.is_running():
-            asyncio.ensure_future(self.__conn.create_task(job_id, index, status))
+            asyncio.run(run())
         else:
-            asyncio.run(self.__conn.create_task(job_id, index, status))
+            loop.create_task(run())
