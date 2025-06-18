@@ -219,10 +219,10 @@ class Tilt:
             try:
                 processed_data = ProcessedData(self.organization_id, job_id, task_id, auth_token=self.__options.auth_token)
                 response = processed_data.download()
-                print(f"Polling attempt {count} for job {job_id}, task {task_id}, segment {segment_index} succeeded")
+                print(f"Segment {segment_index} succeeded")
                 return response
             except:
-                print(f"Polling attempt {count} for job {job_id}, task {task_id}, segment {segment_index} failed, retrying...")
+                print(f"Segment {segment_index} not ready yet, retrying…")
                 time.sleep(3)
 
     def create_and_poll(self, job_name: str = "") -> list[tuple[int, bytes]]:
