@@ -4,10 +4,12 @@ import asyncio
 from typing import Optional
 import queue
 import threading
+from tilt.processed_data import ProcessedData
+from tilt.task_status_polling import TaskStatusPolling
+import time
 
 
 class Tilt:
-
     def __init__(self, options: Options):
         self.__options = options
         self.__conn = Connection(self.__options)
@@ -20,6 +22,8 @@ class Tilt:
         response = self.sk_sign_in(self.__options.secret_key);
         self.__options.auth_token = response['token']
         self.__options.organization_id = response['organization']['id']
+
+        self.organization_id = self.__options.organization_id
 
     def upload_program(self, filepath: str, name: Optional[str] = None, description: Optional[str] = None):
         async def run():
@@ -146,13 +150,32 @@ class Tilt:
             else:
                 raise payload
 
-    # def sk_sign_in(self, sk: str) -> dict:
-    #     async def run():
-    #         return await self.__conn.sk_signing(sk)
+    def poll(self, job_id: str, task_id: str):
+        # task_status_polling = TaskStatusPolling(task_id="", options=self.__options, interval = 2)
+        # task_status_polling.__callback = lambda status: task_status_polling.stop() if status != "pending" else print(f"Task status: {status}")
+        # task_status_polling.start()
 
-    #     try:
-    #         loop = asyncio.get_running_loop()
-    #     except RuntimeError:
-    #         return asyncio.run(run())
-    #     else:
-    #         return loop.create_task(run())
+        limit = 20
+        count = 0
+
+        while count < limit:
+            count += 1
+            try:
+                processed_data = ProcessedData(self.organization_id, job_id, task_id, auth_token=self.__options.auth_token)
+                return processed_data.download()
+            except:
+                print(f"Polling attempt {count} failed, retrying...")
+                time.sleep(3)
+
+    def create_and_poll(self, data: list[bytes], job_name: str = "") -> list[bytes]:
+        job = self.create_job(job_name)
+        job_id = job['id']
+        processed_data = []
+        for index, chunk in enumerate(data):
+            task = self.create_task(job_id, index)
+            task_id = task['id']
+            self.run_task(task_id, chunk)
+            result = self.poll(job_id, task_id)
+            processed_data.append(result)
+
+        return processed_data
