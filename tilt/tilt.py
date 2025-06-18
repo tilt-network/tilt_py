@@ -7,6 +7,9 @@ import threading
 from tilt.processed_data import ProcessedData
 from tilt.task_status_polling import TaskStatusPolling
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from tilt.log import TiltLog
+
 
 
 class Tilt:
@@ -150,7 +153,60 @@ class Tilt:
             else:
                 raise payload
 
-    def poll(self, job_id: str, task_id: str):
+    # def poll(self, job_id: str, task_id: str):
+    #     limit = 20
+    #     count = 0
+    #     while count < limit:
+    #         count += 1
+    #         try:
+    #             processed_data = ProcessedData(
+    #                 self.organization_id,
+    #                 job_id,
+    #                 task_id,
+    #                 auth_token=self.__options.auth_token
+    #             )
+    #             return processed_data.download()
+    #         except:
+    #             print(f"Polling attempt {count} failed, retrying...")
+    #             time.sleep(3)
+
+    # # helper que processa um único chunk
+    # def _process_chunk(self, job_id: str, index: int, chunk: bytes) -> bytes:
+    #     # cria a task e dispara
+    #     task_info = self.create_task(job_id, index)
+    #     task_id = task_info['id']
+    #     self.run_task(task_id, chunk)
+
+    #     # roda o polling e pega o resultado
+    #     result = self.poll(job_id, task_id)
+
+    #     # 1) se vier uma Task, bloqueia até terminar
+    #     if isinstance(result, asyncio.Task):
+    #         # caveat: em Jupyter você não consegue run_until_complete no loop ativo
+    #         # mas, na maioria dos casos, esse path não vai rolar para o poll() síncrono
+    #         result = asyncio.get_event_loop().run_until_complete(result)
+
+    #     # 2) garante em tempo de execução que é bytes
+    #     assert isinstance(result, bytes), f"esperado bytes, veio {type(result)}"
+
+    #     return result
+
+    # def create_and_poll(self, data: list[bytes], job_name: str = "") -> list[bytes]:
+    #     job = self.create_job(job_name)
+    #     job_id = job['id']
+    #     results: list[bytes] = []
+
+    #     with ThreadPoolExecutor() as executor:
+    #         futures = [
+    #             executor.submit(self._process_chunk, job_id, idx, chunk)
+    #             for idx, chunk in enumerate(data)
+    #         ]
+    #         for fut in as_completed(futures):              # ← esse as_completed é do concurrent.futures
+    #             results.append(fut.result())
+
+    #     return results
+
+    def poll(self,  job_id: str, task_id: str, segment_index: int):
         # task_status_polling = TaskStatusPolling(task_id="", options=self.__options, interval = 2)
         # task_status_polling.__callback = lambda status: task_status_polling.stop() if status != "pending" else print(f"Task status: {status}")
         # task_status_polling.start()
@@ -162,20 +218,25 @@ class Tilt:
             count += 1
             try:
                 processed_data = ProcessedData(self.organization_id, job_id, task_id, auth_token=self.__options.auth_token)
-                return processed_data.download()
+                response = processed_data.download()
+                print(f"Polling attempt {count} for job {job_id}, task {task_id}, segment {segment_index} succeeded")
+                return response
             except:
-                print(f"Polling attempt {count} failed, retrying...")
+                print(f"Polling attempt {count} for job {job_id}, task {task_id}, segment {segment_index} failed, retrying...")
                 time.sleep(3)
 
-    def create_and_poll(self, data: list[bytes], job_name: str = "") -> list[bytes]:
+    def create_and_poll(self, job_name: str = "") -> list[tuple[int, bytes]]:
         job = self.create_job(job_name)
         job_id = job['id']
         processed_data = []
+        data = self.__options.data_src.jsonl_to_bytes_list()
         for index, chunk in enumerate(data):
             task = self.create_task(job_id, index)
             task_id = task['id']
+            segment_index = task['segment_index']
             self.run_task(task_id, chunk)
-            result = self.poll(job_id, task_id)
-            processed_data.append(result)
+            result = self.poll(job_id, task_id, segment_index)
+            processed_data.append((segment_index, result))
 
-        return processed_data
+
+        return sorted(processed_data, key=lambda x: x[0])

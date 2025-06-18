@@ -15,11 +15,23 @@ class SourceHandler(ABC):
     def read(self):
         pass
 
+    @abstractmethod
+    def jsonl_to_bytes_list(self) -> list[bytes]:
+        pass
+
 
 class TextSourceHandler(SourceHandler):
     def __init__(self, filepath: str, batch_size: int = 1):
         self.__filepath = filepath
         self.__batch_size = batch_size
+
+    def jsonl_to_bytes_list(self) -> list[bytes]:
+        with open(self.__filepath, 'r', encoding='utf-8') as f:
+            return [
+                line.rstrip('\n').encode('utf-8')
+                for line in f
+                if line.strip()
+            ]
 
     async def read(self):
         async with aiofiles.open(self.__filepath, 'r', encoding='utf-8') as f:
