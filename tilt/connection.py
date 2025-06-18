@@ -79,28 +79,28 @@ class Connection:
         return response
 
     async def run_task(self, task_id: str, data: bytes) -> dict:
-            url = run_task_endpoint()
+        url = run_task_endpoint()
 
-            headers = {
-                "Authorization": f"Bearer {self.__options.auth_token}"
-            }
+        headers = {
+            "Authorization": f"Bearer {self.__options.auth_token}"
+        }
 
-            form = aiohttp.FormData()
-            form.add_field("task_id", task_id)
-            form.add_field("data", data, filename="data.dat")
+        form = aiohttp.FormData()
+        form.add_field("task_id", task_id)
+        form.add_field("data", data, filename="data.dat")
 
-            async with aiohttp.ClientSession(headers=headers) as session:
-                async with session.post(url, data=form) as resp:
-                    try:
-                        return resp
-                    except Exception as e:
-                        TiltLog.error(f"Failed to parse response JSON: {e}")
-                        response = None
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(url, data=form) as resp:
+                try:
+                    return resp
+                except Exception as e:
+                    TiltLog.error(f"Failed to parse response JSON: {e}")
+                    response = None
 
-                    if resp.status != 200:
-                        TiltLog.error(f"Error. Response status: {resp.status}. Response body: {response}")
+                if resp.status != 200:
+                    TiltLog.error(f"Error. Response status: {resp.status}. Response body: {response}")
 
-                    # return response
+                # return response
 
     async def sk_sign_in(self, sk: str) -> dict:
         url = sk_signing_endpoint()

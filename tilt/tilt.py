@@ -5,7 +5,6 @@ from typing import Optional
 import queue
 import threading
 from tilt.processed_data import ProcessedData
-from tilt.task_status_polling import TaskStatusPolling
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed, Future
 from tilt.log import TiltLog
@@ -22,7 +21,7 @@ class Tilt:
         if self.__options.secret_key is None:
             raise ValueError("Secret key must be provided either directly or through options")
 
-        response = self.sk_sign_in(self.__options.secret_key);
+        response = self.sk_sign_in(self.__options.secret_key)
         self.__options.auth_token = response['token']
         self.__options.organization_id = response['organization']['id']
 
@@ -149,10 +148,8 @@ class Tilt:
             return await self.__conn.sk_sign_in(sk)
 
         try:
-            # se não há loop rodando, executa normalmente
             return asyncio.run(run())
         except RuntimeError:
-            # estamos dentro de um loop (e.g. Jupyter); rodar em outro thread
             q: queue.Queue = queue.Queue()
 
             def _runner():
