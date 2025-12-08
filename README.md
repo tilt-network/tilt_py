@@ -42,40 +42,24 @@ pip install "git+ssh://git@github.com:tilt-network/tilt_py.git@dev"
 ```py
 from tilt import Tilt, Options
 
-program_id = ''
-data_src = ''
-options = Options('your_api_key')
+program_id = '...'
+data_src = TextSourceHandler('...') 
 """
-Instantiate Tilt object and run it
+# Configure options
 """
-tilt = Tilt(data_src, program_id, options)
-tilt.run()
-
+options = Options(
+    data_src, # takes any SourceHandler implementation
+    program_id=program_id, 
+    secret_key='your_secret_key'
+)
 """
-Poll API to check task status
+# Create Tilt instance
 """
-poll = TaskStatusPolling(program_id, interval=15)
-poll.start()
-while poll.is_running:
-    poll_status = poll.check_status()  # will keep checking the API every <interval> seconds (default is 15 seconds)
-    print(poll_status)
-
-poll.stop()
-
+tilt = Tilt(options)
 """
-Check status via data streaming
+Send batches and synchronously wait for all segment updates
 """
-stream = TaskStatusStreaming(program_id)
-result = stream.start()  # will keep a connection open and await a response
-
-"""
-Fetch processed data after process
-"""
-data = ProcessedData(program_id, "/tmp/output.bin")
-data.download()  # Automatically writes to file
-
-data = ProcessedData(program_id)
-content = data.download()  # Returns bytes
+response = tilt.create_and_poll()  # Returns bytes
 ```
 
 The client will read from the configured data source, batch the input, and send it to the configured Tilt API endpoint.

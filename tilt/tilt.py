@@ -10,24 +10,32 @@ from concurrent.futures import ThreadPoolExecutor, as_completed, Future
 from tilt.log import TiltLog
 
 
-
 class Tilt:
     def __init__(self, options: Options):
         self.__options = options
         self.__conn = Connection(self.__options)
         if self.__options.data_src is None or self.__options.program_id is None:
-            raise ValueError("Both data_src and program_id must be provided either directly or through options")
+            raise ValueError(
+                "Both data_src and program_id must be provided either directly or through options"
+            )
 
         if self.__options.secret_key is None:
-            raise ValueError("Secret key must be provided either directly or through options")
+            raise ValueError(
+                "Secret key must be provided either directly or through options"
+            )
 
         response = self.sk_sign_in(self.__options.secret_key)
-        self.__options.auth_token = response['token']
-        self.__options.organization_id = response['organization']['id']
+        self.__options.auth_token = response["token"]
+        self.__options.organization_id = response["organization"]["id"]
 
         self.organization_id = self.__options.organization_id
 
-    def upload_program(self, filepath: str, name: Optional[str] = None, description: Optional[str] = None):
+    def upload_program(
+        self,
+        filepath: str,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+    ):
         async def run():
             await self.__conn.upload_program(filepath, name, description)
 
@@ -190,7 +198,7 @@ class Tilt:
                     self.organization_id,
                     job_id,
                     task_id,
-                    auth_token=self.__options.auth_token
+                    auth_token=self.__options.auth_token,
                 )
                 response = processed_data.download()
                 print(f"Segment {segment_index} succeeded")
@@ -199,34 +207,35 @@ class Tilt:
                 print(f"Segment {segment_index} not ready yet…")
                 time.sleep(3)
 
-    # helper que processa um único chunk
+    # helper that process in a single chunck
     def _process_chunk(self, job_id: str, index: int, chunk: bytes) -> bytes:
-        # cria a task e dispara
+        # creates a tasks and fire it
         task_info = self.create_task(job_id, index)
-        task_id = task_info['id']
+        task_id = task_info["id"]
         self.run_task(task_id, chunk)
 
-        # roda o polling e pega o resultado
+        # runs polling and grab the result
         result = self.poll(job_id, task_id, index)
 
-        # 1) se vier uma Task, bloqueia até terminar
+        # 1) if it receives a Task, blocks until it finishes
         if isinstance(result, asyncio.Task):
-            # caveat: em Jupyter você não consegue run_until_complete no loop ativo
-            # mas, na maioria dos casos, esse path não vai rolar para o poll() síncrono
+            # caveat: in Jupyter you can't run_until_complete on an active loop
+            # however, for most cases, this path won't rooback to synchronous poll()
             result = asyncio.get_event_loop().run_until_complete(result)
 
         # 2) garante em tempo de execução que é bytes
-        assert isinstance(result, bytes), f"esperado bytes, veio {type(result)}"
+        assert isinstance(result, bytes), f"expected bytes, received {type(result)}"
 
         return result
 
     def create_and_poll(self, job_name: str = "") -> list[tuple[int, Optional[bytes]]]:
-        data      = self.__options.data_src.jsonl_to_bytes_list()
-        job       = self.create_job(job_name)
-        job_id    = job['id']
+        data = self.__options.data_src.jsonl_to_bytes_list()
+        job = self.create_job(job_name)
+        job_id = job["id"]
 
-        # Monkey-patch temporário: ThreadPoolExecutor vai usar threads não-daemon
+        # Monkey-patch temporário: ThreadPoolExecutor will use threads non-daemon
         _Thread = threading.Thread
+
         class NonDaemonThread(_Thread):
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
@@ -253,7 +262,7 @@ class Tilt:
                         results.append((idx, None))
 
         finally:
-            # restaura o threading.Thread original
+            # restores original threading.Thread
             threading.Thread = _Thread
 
         return sorted(results, key=lambda x: x[0])
@@ -292,7 +301,6 @@ class Tilt:
     #         self.run_task(task_id, chunk)
     #         result = self.poll(job_id, task_id, segment_index)
     #         processed_data.append((segment_index, result))
-
 
     #     return sorted(processed_data, key=lambda x: x[0])
     # endregion
