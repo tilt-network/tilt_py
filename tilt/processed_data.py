@@ -2,7 +2,7 @@ import aiohttp
 import asyncio
 import os
 import json
-from sectioner import Chunk
+from tilt.sectioner import Chunk
 from tilt.endpoints import download_processed_data_endpoint
 from tilt.log import TiltLog
 from tilt.source_handler import BinarySourceHandler

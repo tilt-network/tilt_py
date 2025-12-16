@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 import aiofiles
 import asyncio
-from sectioner import reconstruct_file, deconstruct_file, Chunk
-from sectioner import split_video as sectioner_split_video
-from sectioner import reconstruct_video as sectioner_reconstruct_video
+from tilt.sectioner import reconstruct_file, deconstruct_file, Chunk
+from tilt.sectioner import split_video as sectioner_split_video
+from tilt.sectioner import reconstruct_video as sectioner_reconstruct_video
 
 
 class SourceHandler(ABC):
