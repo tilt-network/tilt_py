@@ -4,7 +4,7 @@ This is the official Python client for submitting and processing data in the [Ti
 
 ## 🚀 Overview
 
-Tilt enables distributed data processing by orchestrating multiple devices connected to a network.  
+Tilt enables distributed data processing by orchestrating multiple devices connected to a network.
 This client is responsible for reading input files, batching the content, and sending it to the Tilt API asynchronously.
 
 ## 📁 Project Structure
@@ -32,7 +32,7 @@ This client is responsible for reading input files, batching the content, and se
 You can install the library directly from Git using SSH:
 
 ```bash
-pip install "git+ssh://git@github.com:tilt-network/tilt_py.git@dev"
+pip install "git+ssh://git@github.com:tilt-network/tilt_py.git"
 ```
 
 ⚠️ Make sure your SSH key is added to your GitHub account.
@@ -43,13 +43,13 @@ pip install "git+ssh://git@github.com:tilt-network/tilt_py.git@dev"
 from tilt import Tilt, Options
 
 program_id = '...'
-data_src = TextSourceHandler('...') 
+data_src = TextSourceHandler('...')
 """
 # Configure options
 """
 options = Options(
     data_src, # takes any SourceHandler implementation
-    program_id=program_id, 
+    program_id=program_id,
     secret_key='your_secret_key'
 )
 """
