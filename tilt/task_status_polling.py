@@ -37,6 +37,6 @@ class TaskStatusPolling:
     async def _check_status(self, session: aiohttp.ClientSession) -> str:
         try:
             async with session.get(self.__url) as resp:
-                return await resp.text()
+                return await resp.json()
         except Exception as e:
             return f"error: {e}"
