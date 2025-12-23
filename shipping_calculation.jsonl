@@ -13,9 +13,3 @@
 {"origin": {"lat": -3.7172, "lon": -38.5433}, "destination": {"lat": -7.1195, "lon": -34.8450}, "priority": 3, "requested_at": 1753401600}
 {"origin": {"lat": -10.9472, "lon": -37.0731}, "destination": {"lat": -12.9822, "lon": -38.4813}, "priority": 5, "requested_at": 1753401600}
 {"origin": {"lat": -22.9035, "lon": -43.2096}, "destination": {"lat": -23.5505, "lon": -46.6333}, "priority": 5, "requested_at": 1753401600}
-{"origin": {"lat": -26.3044, "lon": -48.8487}, "destination": {"lat": -27.5954, "lon": -48.5480}, "priority": 4, "requested_at": 1753401600}
-{"origin": {"lat": -22.9068, "lon": -43.1729}, "destination": {"lat": -19.9167, "lon": -43.9345}, "priority": 2, "requested_at": 1753401600}
-{"origin": {"lat": -3.1190, "lon": -60.0217}, "destination": {"lat": -5.7945, "lon": -35.2110}, "priority": 4, "requested_at": 1753401600}
-{"origin": {"lat": -7.1153, "lon": -34.8610}, "destination": {"lat": -1.4558, "lon": -48.4902}, "priority": 2, "requested_at": 1753401600}
-{"origin": {"lat": -30.0346, "lon": -51.2177}, "destination": {"lat": -25.4284, "lon": -49.2733}, "priority": 2, "requested_at": 1753401600}
-{"origin": {"lat": -23.5505, "lon": -46.6333}, "destination": {"lat": -15.7942, "lon": -47.8822}, "priority": 2, "requested_at": 1753401600}

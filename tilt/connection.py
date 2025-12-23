@@ -1,28 +1,42 @@
 import asyncio
-import aiohttp
 from pathlib import Path
-from tilt.endpoints import programs_endpoint, jobs_endpoint, tasks_endpoint, sk_signing_endpoint, run_task_endpoint
-from tilt.options import Options
-from tilt.log import TiltLog
 from typing import Optional
+
+import aiohttp
+
+from tilt.endpoints import (
+    jobs_endpoint,
+    programs_endpoint,
+    run_task_endpoint,
+    sk_signing_endpoint,
+    tasks_endpoint,
+)
+from tilt.log import TiltLog
+from tilt.options import Options
 
 
 class Connection:
     def __init__(self, options: Options):
         self.__options = options
 
-    async def upload_program(self, filepath: str, name: Optional[str] = None, description: Optional[str] = None):
+    async def upload_program(
+        self,
+        filepath: str,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+    ):
         url = programs_endpoint()
-        headers = {
-            "Authorization": f"Bearer {self.__options.auth_token}"
-        }
+        headers = {"Authorization": f"Bearer {self.__options.auth_token}"}
 
         file_data = Path(filepath).read_bytes()
 
         form = aiohttp.FormData()
-        form.add_field("program", file_data,
-                       filename=Path(filepath).name,
-                       content_type="application/octet-stream")
+        form.add_field(
+            "program",
+            file_data,
+            filename=Path(filepath).name,
+            content_type="application/octet-stream",
+        )
         form.add_field("organization_id", self.__options.organization_id)
         form.add_field("name", name)
         form.add_field("description", description)
@@ -39,7 +53,7 @@ class Connection:
 
         headers = {
             "Authorization": f"Bearer {self.__options.auth_token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         payload = {
@@ -47,7 +61,7 @@ class Connection:
             "name": name,
             "status": status,
             "total_tokens": 0,
-            "program_id": self.__options.program_id
+            "program_id": self.__options.program_id,
         }
 
         async with aiohttp.ClientSession(headers=headers) as session:
@@ -62,14 +76,10 @@ class Connection:
 
         headers = {
             "Authorization": f"Bearer {self.__options.auth_token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
-        payload = {
-            "job_id": job_id,
-            "segment_index": index,
-            "status": status
-        }
+        payload = {"job_id": job_id, "segment_index": index, "status": status}
 
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.post(url, json=payload) as resp:
@@ -81,9 +91,7 @@ class Connection:
     async def run_task(self, task_id: str, data: bytes) -> dict:
         url = run_task_endpoint()
 
-        headers = {
-            "Authorization": f"Bearer {self.__options.auth_token}"
-        }
+        headers = {"Authorization": f"Bearer {self.__options.auth_token}"}
 
         form = aiohttp.FormData()
         form.add_field("task_id", task_id)
@@ -98,7 +106,9 @@ class Connection:
                     response = None
 
                 if resp.status != 200:
-                    TiltLog.error(f"Error. Response status: {resp.status}. Response body: {response}")
+                    TiltLog.error(
+                        f"Error. Response status: {resp.status}. Response body: {response}"
+                    )
 
                 # return response
 
@@ -107,12 +117,10 @@ class Connection:
 
         headers = {
             "Authorization": f"Bearer {self.__options.auth_token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
-        payload = {
-            "secret_key": sk
-        }
+        payload = {"secret_key": sk}
 
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.post(url, json=payload) as resp:
@@ -123,6 +131,8 @@ class Connection:
                     response = None
 
                 if resp.status != 200:
-                    TiltLog.error(f"Error. Response status: {resp.status}. Response body: {response}")
+                    TiltLog.error(
+                        f"Error. Response status: {resp.status}. Response body: {response}"
+                    )
 
                 return response
