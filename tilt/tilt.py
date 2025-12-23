@@ -2,6 +2,7 @@ import asyncio
 import queue
 import threading
 import time
+import warnings
 from typing import Optional
 
 from rich.console import Console, Group
@@ -23,6 +24,32 @@ from tilt.options import Options
 from tilt.processed_data import ProcessedData
 
 console = Console(stderr=True)
+
+
+def _is_jupyter():
+    try:
+        from IPython.core.getipython import get_ipython
+
+        ipy = get_ipython()
+        return ipy is not None and "IPKernelApp" in ipy.config
+    except (ImportError, NameError, AttributeError):
+        return False
+
+
+if _is_jupyter():
+    try:
+        import nest_asyncio
+
+        nest_asyncio.apply()
+    except ImportError:
+        pass
+
+warnings.filterwarnings(
+    "ignore",
+    message='install "ipywidgets" for Jupyter support',
+    category=UserWarning,
+    module="rich.live",
+)
 
 
 class Tilt:
@@ -111,10 +138,6 @@ class Tilt:
                 return payload
             raise payload
 
-    # -------------------------------------------------
-    # Poll
-    # -------------------------------------------------
-
     def poll(self, job_id: str, task_id: str, segment_index: int):
         limit = 20
         count = 0
@@ -133,10 +156,6 @@ class Tilt:
                 time.sleep(2)
 
         raise TimeoutError(f"Segment {segment_index} timeout")
-
-    # -------------------------------------------------
-    # Chunk worker
-    # -------------------------------------------------
 
     def _process_chunk(
         self,
@@ -157,10 +176,6 @@ class Tilt:
 
         statuses[index] = "finished"
         return result
-
-    # -------------------------------------------------
-    # UI helpers
-    # -------------------------------------------------
 
     def _create_progress(self, total: int) -> Progress:
         return Progress(
@@ -208,10 +223,6 @@ class Tilt:
 
         return text
 
-    # -------------------------------------------------
-    # Main entry
-    # -------------------------------------------------
-
     def create_and_poll(
         self, job_name: str = "", max_workers: int = 16
     ) -> list[tuple[int, Optional[bytes]]]:
@@ -258,7 +269,6 @@ class Tilt:
             console=console,
             refresh_per_second=10,
         ) as live:
-            # start workers
             for _ in range(max_workers):
                 t = threading.Thread(target=worker)
                 t.start()
@@ -284,6 +294,16 @@ class Tilt:
                         progress,
                     )
                 )
+
+            if _is_jupyter():
+                time.sleep(0.5)
+                live.update(
+                    Group(
+                        self._render_lines(statuses),
+                        progress,
+                    )
+                )
+                console.print("[green]Processing complete![/green]")  # opcional
 
             for t in threads:
                 t.join()
