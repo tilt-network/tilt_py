@@ -20,6 +20,7 @@ from rich.text import Text
 from tilt.async_executor import AsyncExecutor
 from tilt.connection import Connection
 from tilt.console import ChunkSpeedColumn
+from tilt.entities.auth import SkSignInResponse
 from tilt.entities.job import Job
 from tilt.entities.task import Task
 from tilt.log import TiltLog
@@ -31,7 +32,6 @@ from tilt.types import (
     Ok,
     Option,
     Result,
-    SkSignInResponse,
     Some,
     is_ok,
     is_some,

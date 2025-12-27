@@ -11,6 +11,7 @@ from tilt.endpoints import (
     sk_signing_endpoint,
     tasks_endpoint,
 )
+from tilt.entities.auth import SkSignInResponse
 from tilt.entities.job import Job
 from tilt.entities.task import Task
 from tilt.log import TiltLog
@@ -22,7 +23,6 @@ from tilt.types import (
     Ok,
     Option,
     Result,
-    SkSignInResponse,
     unwrap,
 )
 
