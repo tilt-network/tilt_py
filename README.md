@@ -9,23 +9,42 @@ This client is responsible for reading input files, batching the content, and se
 
 ## 📁 Project Structure
 
-```bash
+```
 .
 ├── README.md
-├── init.py
-├── connection.py
-├── options.py
 ├── pyproject.toml
 ├── requirements.txt
-├── tilt.py
-└── utils.py
+└── tilt/
+    ├── __init__.py
+    ├── async_executor.py
+    ├── connection.py
+    ├── console.py
+    ├── endpoints.py
+    ├── entities/
+    │   ├── __init__.py
+    │   ├── auth.py
+    │   ├── job.py
+    │   ├── organization.py
+    │   ├── task.py
+    │   └── user.py
+    ├── log.py
+    ├── main.py
+    ├── options.py
+    ├── processed_data.py
+    ├── source_handler.py
+    ├── tilt.py
+    ├── types.py
+    └── utils.py
 ```
 
 - `tilt.py`: Main interface class (`Tilt`) used to run jobs.
-- `connection.py`: Handles file reading and async communication with the API.
-- `options.py`: Manages client configuration and local validation logic.
-- `utils.py`: Utility functions such as logging.
-- `__init__.py`: Exposes the public API (`Tilt`, `Options`).
+- `connection.py`: Handles HTTP connections and API interactions.
+- `options.py`: Manages client configuration and validation.
+- `source_handler.py`: Defines handlers for different data sources (e.g., text files).
+- `entities/`: Contains data models for API responses (e.g., Job, Task, User).
+- `main.py`: Example script demonstrating usage.
+- `utils.py`: Utility functions, including Jupyter support.
+- `__init__.py`: Exposes the public API (`Tilt`, `Options`, etc.).
 
 ## 📦 Installation
 
@@ -37,41 +56,52 @@ pip install "git+ssh://git@github.com:tilt-network/tilt_py.git"
 
 ⚠️ Make sure your SSH key is added to your GitHub account.
 
-🧑‍💻 Usage
+## 🧑‍💻 Usage
 
-```py
-from tilt import Tilt, Options
+```python
+import os
+from uuid import UUID
 
-program_id = '...'
-data_src = TextSourceHandler('...')
-"""
-# Configure options
-"""
+from tilt.options import Options
+from tilt.source_handler import TextSourceHandler
+from tilt.tilt import Tilt
+from tilt.types import Some
+
+# Load environment variables or set directly
+SECRET_KEY = os.getenv("SECRET_KEY")  # or "your_secret_key"
+PROGRAM_ID = UUID("c6e024e0-ad75-45ca-94b4-bbeadb4eebfa")  # Replace with your program ID
+INPUT_FILE = "shipping_calculation.jsonl"  # Path to your input file
+
+# Configure data source and options
+data_src = TextSourceHandler(INPUT_FILE)
 options = Options(
-    data_src, # takes any SourceHandler implementation
-    program_id=program_id,
-    secret_key='your_secret_key'
+    data_src=data_src,
+    program_id=Some(PROGRAM_ID),
+    secret_key=Some(SECRET_KEY),
 )
-"""
-# Create Tilt instance
-"""
+
+# Create Tilt instance and run processing
 tilt = Tilt(options)
-"""
-Send batches and synchronously wait for all segment updates
-"""
-response = tilt.create_and_poll()  # Returns bytes
+results = tilt.create_and_poll()
+
+# Process results
+texts = []
+for _, item in results:
+    if item is not None:
+        texts.append(item.value.decode())
+
+print("\n===================\nResponse:\n")
+print(" ".join(texts))
 ```
 
-The client will read from the configured data source, batch the input, and send it to the configured Tilt API endpoint.
+The client reads from the configured data source, batches the input, and sends it to the Tilt API for processing.
 
-✅ Requirements
+## ✅ Requirements
 
 - Python 3.8+
-- A file-based dataset as input (must be a valid UTF-8 text file)
-- Valid API key (can be passed via Options or via TILT_API_KEY environment variable)
-- SQLite database at ~/tilt/tilt.db with a programs(name TEXT, program_id TEXT) table for validation
-
-Aqui vai um tópico bem escrito em inglês que você pode adicionar ao seu README.md para documentar o problema e a solução (fix) do erro de certificado SSL que resolvemos:
+- A file-based dataset as input (must be a valid UTF-8 text file, e.g., JSONL)
+- Valid API key (can be passed via `Options` or environment variable `SECRET_KEY`)
+- Internet connection for API calls
 
 ## Common Issues & Fixes
 
