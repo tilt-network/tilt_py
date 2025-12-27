@@ -28,37 +28,76 @@ from tilt.types import (
 
 
 def custom_json_serializer(obj):
+    """Serializes an object to JSON string and logs the output."""
     json_str = json.dumps(obj, cls=CustomJSONEncoder)
     TiltLog.info(f"Sending JSON: {json_str}")
     return json_str
 
 
 class Connection:
+    """Handles HTTP connections and API interactions for the Tilt service."""
+
     def __init__(self, options: Options):
+        """Initializes the Connection with the given options."""
         self.__options = options
         self._session: aiohttp.ClientSession | None = None
 
-    # async def _get_session(self) -> aiohttp.ClientSession:
-    #     if self._session is None:
-    #         self._session = aiohttp.ClientSession(
-    #             json_serialize=custom_json_serializer
-    #         )
-    #     return self._session
-
     async def _get_session(self) -> aiohttp.ClientSession:
+        """Gets or creates an aiohttp ClientSession."""
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(json_serialize=custom_json_serializer)
         return self._session
 
+    async def _handle_response(
+        self,
+        resp: aiohttp.ClientResponse,
+        expected_status: int = 200,
+        context: str = "",
+    ) -> Result[dict, Error]:
+        """Handles HTTP response, checking status and parsing JSON."""
+        if resp.status != expected_status:
+            body = await resp.text()
+            return Err(
+                Error(f"{context} Invalid response status {resp.status}: {body}")
+            )
+
+        try:
+            data = await resp.json()
+            return Ok(data)
+        except Exception as e:
+            return Err(Error(f"{context} Failed to parse JSON: {e}"))
+
+    async def _handle_parsed_response(
+        self,
+        resp: aiohttp.ClientResponse,
+        expected_status: int,
+        from_json_func,
+        context: str,
+    ) -> Result:
+        """Handles response and parses it into an object using the provided function."""
+        match await self._handle_response(resp, expected_status, context):
+            case Ok(data):
+                try:
+                    res = from_json_func(data)
+                    return Ok(res)
+                except TypeError as e:
+                    TiltLog.error(f"{context} Failed to parse response: {e}")
+                    return Err(Error(f"{context} Invalid response format: {e}"))
+            case Err(error):
+                return Err(error)
+
     async def close(self) -> None:
+        """Closes the aiohttp session if open."""
         if self._session is not None and not self._session.closed:
             await self._session.close()
             self._session = None
 
     async def __aenter__(self):
+        """Enters the async context manager."""
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
+        """Exits the async context manager, closing the session."""
         await self.close()
 
     async def upload_program(
@@ -67,6 +106,7 @@ class Connection:
         name: Option[str] = None,
         description: Option[str] = None,
     ):
+        """Uploads a program file to the Tilt platform."""
         url = programs_endpoint()
         headers = {"Authorization": f"Bearer {unwrap(self.__options.auth_token)}"}
 
@@ -85,14 +125,17 @@ class Connection:
 
         session = await self._get_session()
         async with session.post(url, data=form, headers=headers) as resp:
-            if resp.status != 200:
-                TiltLog.error(f"Error. Response status: {resp.status}")
-            response = await resp.json()
-        return response
+            match await self._handle_response(resp, 200, "(upload_program)"):
+                case Ok(data):
+                    return data
+                case Err(error):
+                    TiltLog.error(f"Upload program failed: {error.message}")
+                    raise RuntimeError(error.message)
 
     async def create_job(
         self, name: Option[str] = None, status: str = "pending"
     ) -> Result[Job, Error]:
+        """Creates a new job on the Tilt platform."""
         url = jobs_endpoint()
 
         headers = {
@@ -110,24 +153,14 @@ class Connection:
 
         session = await self._get_session()
         async with session.post(url, json=payload, headers=headers) as resp:
-            if resp.status != 201:
-                body = await resp.text()
-                return Err(
-                    Error(f"(create_job) Invalid response status {resp.status}: {body}")
-                )
-
-            response_dict = await resp.json()
-
-        try:
-            res = Job.from_json(response_dict)
-            return Ok(res)
-        except TypeError as e:
-            TiltLog.error(f"(create_job) Failed to create Job from response: {e}")
-            return Err(Error(f"(create_job) Invalid response format: {e}"))
+            return await self._handle_parsed_response(
+                resp, 201, Job.from_json, "(create_job)"
+            )
 
     async def create_task(
         self, job_id: UUID, index: int, status: str = "pending"
     ) -> Result[Task, Error]:
+        """Creates a new task within a job on the Tilt platform."""
         url = tasks_endpoint()
 
         headers = {
@@ -137,25 +170,14 @@ class Connection:
 
         payload = {"job_id": job_id, "segment_index": index, "status": status}
 
-        # print(f"json headers: {json.dumps(headers, cls=CustomJSONEncoder)}")
-        # print(f"json payload: {json.dumps(payload, cls=CustomJSONEncoder)}")
-        # print(f"(create_task) json response: {json.dumps(data, cls=CustomJSONEncoder)}")
-
         session = await self._get_session()
         async with session.post(url, json=payload, headers=headers) as resp:
-            if resp.status != 201:
-                TiltLog.error(f"Error. Response status (create_task): {resp.status}")
-                return Err(Error(f"Invalid response status: {resp.status}"))
-
-            data = await resp.json()
-            try:
-                task = Task.from_json(data)
-                return Ok(task)
-            except TypeError as e:
-                TiltLog.error(f"Failed to create Task from response: {e}")
-                return Err(Error(f"Invalid response format: {e}"))
+            return await self._handle_parsed_response(
+                resp, 201, Task.from_json, "(create_task)"
+            )
 
     async def run_task(self, task_id: UUID, data: bytes) -> Result[Task, Error]:
+        """Runs a task with the provided data on the Tilt platform."""
         url = run_task_endpoint()
 
         headers = {"Authorization": f"Bearer {unwrap(self.__options.auth_token)}"}
@@ -166,33 +188,12 @@ class Connection:
 
         session = await self._get_session()
         async with session.post(url, data=form, headers=headers) as resp:
-            try:
-                response_dict = await resp.json()
-            except Exception as e:
-                TiltLog.error(f"Failed to parse response JSON: {e}")
-                return Err(Error("Failed to parse response JSON"))
-
-            if resp.status >= 300:
-                TiltLog.error(
-                    f"Error. (run_task) Response status: {resp.status}. Response body: {response_dict}"
-                )
-                return Err(
-                    Error(
-                        f"Error. (run_task) Response status: {resp.status}. Response body: {response_dict}"
-                    )
-                )
-
-            try:
-                # print(f"json headers: {json.dumps(headers, cls=CustomJSONEncoder)}")
-                # print(f"json payload: {json.dumps(payload, cls=CustomJSONEncoder)}")
-                # print(f"(run_task) json response: {json.dumps(response_dict, cls=CustomJSONEncoder)}")
-                res = Task.from_json(response_dict)
-                return Ok(res)
-            except TypeError as e:
-                TiltLog.error(f"Failed to run task from response: {e}")
-                return Err(Error(f"Invalid response format: {e}"))
+            return await self._handle_parsed_response(
+                resp, 200, Task.from_json, "(run_task)"
+            )
 
     async def sk_sign_in(self, sk: str) -> Result[SkSignInResponse, Error]:
+        """Authenticates using a secret key and returns the sign-in response."""
         url = sk_signing_endpoint()
 
         headers = {"Content-Type": "application/json"}
@@ -200,21 +201,6 @@ class Connection:
 
         session = await self._get_session()
         async with session.post(url, json=payload, headers=headers) as resp:
-            try:
-                response_dict = await resp.json()
-            except Exception as e:
-                TiltLog.error(f"Failed to parse response JSON: {e}")
-                return Err(Error(f"Failed to parse response JSON: {e}"))
-
-            if resp.status != 200:
-                TiltLog.error(
-                    f"Error. Response status: {resp.status}. Response body: {response_dict}"
-                )
-                return Err(Error(f"Failed to authenticate with secret key: {sk}"))
-
-            try:
-                res = SkSignInResponse.from_json(response_dict)
-                return Ok(res)
-            except TypeError as e:
-                TiltLog.error(f"Failed to create Task from response: {e}")
-                return Err(Error(f"Invalid response format: {e}"))
+            return await self._handle_parsed_response(
+                resp, 200, SkSignInResponse.from_json, "(sk_sign_in)"
+            )
