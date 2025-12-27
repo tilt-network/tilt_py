@@ -48,13 +48,11 @@ This client is responsible for reading input files, batching the content, and se
 
 ## 📦 Installation
 
-You can install the library directly from Git using SSH:
+You can install the library directly from Git:
 
 ```bash
-pip install "git+ssh://git@github.com:tilt-network/tilt_py.git"
+pip install "git+https://github.com/tilt-network/tilt_py.git"
 ```
-
-⚠️ Make sure your SSH key is added to your GitHub account.
 
 ## 🧑‍💻 Usage
 
@@ -98,7 +96,7 @@ The client reads from the configured data source, batches the input, and sends i
 
 ## ✅ Requirements
 
-- Python 3.8+
+- Python 3.10+
 - A file-based dataset as input (must be a valid UTF-8 text file, e.g., JSONL)
 - Valid API key (can be passed via `Options` or environment variable `SECRET_KEY`)
 - Internet connection for API calls
