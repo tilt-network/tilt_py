@@ -1,6 +1,6 @@
 # Tilt Python Client
 
-This is the official Python client for submitting and processing data in the [Tilt](https://tilt.network) distributed computing platform.
+This is the official Python client for submitting and processing data in the [Tilt](https://tilt.technology) distributed computing platform.
 
 ## 🚀 Overview
 
