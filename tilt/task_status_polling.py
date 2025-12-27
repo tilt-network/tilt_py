@@ -1,13 +1,22 @@
 import asyncio
-import aiohttp
 import threading
 from typing import Callable, Optional
+from uuid import UUID
+
+import aiohttp
+
 from tilt.endpoints import status_polling_endpoint
 from tilt.options import Options
 
 
 class TaskStatusPolling:
-    def __init__(self, task_id: str, options: Options, interval: int = 15, callback: Optional[Callable[[str], None]] = None):
+    def __init__(
+        self,
+        task_id: UUID,
+        options: Options,
+        interval: int = 15,
+        callback: Optional[Callable[[str], None]] = None,
+    ):
         self.__url = status_polling_endpoint(task_id)
         self.__options = options
         self.__interval = interval

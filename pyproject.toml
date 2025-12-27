@@ -3,7 +3,7 @@ name = "tilt_py"
 version = "0.1.0"
 description = "Python client for processing and sending data to Tilt's distributed computing platform"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = ["aiohttp>=3.8", "aiofiles>=23.0"]
 
 [build-system]
