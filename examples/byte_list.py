@@ -1,8 +1,7 @@
 import os
 from uuid import UUID
 
-from tilt.options import Options
-from tilt.tilt import Tilt
+from tilt import Options, Tilt
 from tilt.types import Environment, Some, is_some
 from tilt.validator import is_valid_api_key
 
