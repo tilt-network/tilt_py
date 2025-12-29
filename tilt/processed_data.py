@@ -22,6 +22,7 @@ class ProcessedData:
         dest_path: Optional[str] = None,
         chunk_size: int = 1024 * 1024,
         auth_token: str = "",
+        base_url: str = "https://production.tilt.rest",
     ):
         self.__organization_id = organization_id
         self.__job_id = job_id
@@ -29,6 +30,7 @@ class ProcessedData:
         self.__chunk_size = chunk_size
         self.__dest_path = dest_path
         self.__auth_token = auth_token
+        self.__base_url = base_url
 
     def download(self):
         try:
@@ -46,7 +48,10 @@ class ProcessedData:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 download_processed_data_endpoint(
-                    self.__organization_id, self.__job_id, self.__task_id
+                    self.__base_url,
+                    self.__organization_id,
+                    self.__job_id,
+                    self.__task_id,
                 ),
                 headers={"Authorization": f"Bearer {self.__auth_token}"},
             ) as resp:
@@ -63,7 +68,10 @@ class ProcessedData:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 download_processed_data_endpoint(
-                    self.__organization_id, self.__job_id, self.__task_id
+                    self.__base_url,
+                    self.__organization_id,
+                    self.__job_id,
+                    self.__task_id,
                 ),
                 headers={"Authorization": f"Bearer {self.__auth_token}"},
             ) as resp:

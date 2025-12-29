@@ -35,6 +35,12 @@ class Ok(Generic[T]):
     def unwrap(self) -> T:
         return self.value
 
+    def is_ok(self) -> bool:
+        return True
+
+    def is_err(self) -> bool:
+        return False
+
 
 E = TypeVar("E")
 
@@ -46,16 +52,14 @@ class Err(Generic[E], Exception):
     def unwrap(self) -> NoReturn:
         raise RuntimeError(f"called unwrap() on Err: {self.value}")
 
+    def is_ok(self) -> bool:
+        return False
+
+    def is_err(self) -> bool:
+        return True
+
 
 Result = Union[Ok[T], Err[E]]
-
-
-def is_ok(result: Result[T, E]) -> TypeGuard[Ok[T]]:
-    return isinstance(result, Ok)
-
-
-def is_err(result: Result[T, E]) -> TypeGuard[Err[E]]:
-    return isinstance(result, Err)
 
 
 Option = Union[Some[T], None]
@@ -107,6 +111,12 @@ class ErrorKind(Enum):
 class Error:
     # kind: ErrorKind
     message: str
+
+
+class Environment(Enum):
+    DEVELOPMENT = 0
+    STAGING = 1
+    PRODUCTION = 2
 
 
 class CustomJSONEncoder(json.JSONEncoder):

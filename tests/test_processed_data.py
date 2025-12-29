@@ -1,9 +1,11 @@
-import pytest
-import uuid
 import json
+import uuid
+
+import pytest
+from werkzeug.wrappers import Response
+
 import tilt.endpoints as endpoints
 from tilt.processed_data import ProcessedData
-from werkzeug.wrappers import Response
 
 
 def file_response_handler(request):
@@ -14,7 +16,9 @@ def file_response_handler(request):
         task_id = parts[1]
 
         if task_id == "missing":
-            return Response(f"Program not found: {task_id}", status=404, content_type="text/plain")
+            return Response(
+                f"Program not found: {task_id}", status=404, content_type="text/plain"
+            )
 
         chunk = [{"index": 0, "data": [1, 2, 3, 4]}]
         fake_data = json.dumps(chunk).encode("utf-8")
@@ -28,10 +32,18 @@ async def test_download_processed_data(httpserver, tmp_path):
     pid = str(uuid.uuid4())
     endpoints.API_BASE_URL = f"http://{httpserver.host}:{httpserver.port}"
 
-    httpserver.expect_request(f"/processed_data/{pid}", method="GET").respond_with_handler(file_response_handler)
+    httpserver.expect_request(
+        f"/processed_data/{pid}", method="GET"
+    ).respond_with_handler(file_response_handler)
 
     dest = tmp_path / f"{pid}.dat"
-    downloader = ProcessedData(program_id=pid, dest_path=str(dest))
+    downloader = ProcessedData(
+        organization_id=uuid.UUID(pid),
+        job_id=uuid.UUID(pid),
+        task_id=uuid.UUID(pid),
+        dest_path=str(dest),
+        base_url=endpoints.API_BASE_URL,
+    )
     result_path = await downloader.download()
 
     assert result_path == str(dest)

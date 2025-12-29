@@ -107,7 +107,7 @@ class Connection:
         description: Option[str] = None,
     ):
         """Uploads a program file to the Tilt platform."""
-        url = programs_endpoint()
+        url = programs_endpoint(self.__options.base_url)
         headers = {"Authorization": f"Bearer {unwrap(self.__options.auth_token)}"}
 
         file_data = Path(filepath).read_bytes()
@@ -136,7 +136,7 @@ class Connection:
         self, name: Option[str] = None, status: str = "pending"
     ) -> Result[Job, Error]:
         """Creates a new job on the Tilt platform."""
-        url = jobs_endpoint()
+        url = jobs_endpoint(self.__options.base_url)
 
         headers = {
             "Authorization": f"Bearer {unwrap(self.__options.auth_token)}",
@@ -161,7 +161,7 @@ class Connection:
         self, job_id: UUID, index: int, status: str = "pending"
     ) -> Result[Task, Error]:
         """Creates a new task within a job on the Tilt platform."""
-        url = tasks_endpoint()
+        url = tasks_endpoint(self.__options.base_url)
 
         headers = {
             "Authorization": f"Bearer {unwrap(self.__options.auth_token)}",
@@ -178,7 +178,7 @@ class Connection:
 
     async def run_task(self, task_id: UUID, data: bytes) -> Result[Task, Error]:
         """Runs a task with the provided data on the Tilt platform."""
-        url = run_task_endpoint()
+        url = run_task_endpoint(self.__options.base_url)
 
         headers = {"Authorization": f"Bearer {unwrap(self.__options.auth_token)}"}
 
@@ -194,7 +194,7 @@ class Connection:
 
     async def sk_sign_in(self, sk: str) -> Result[SkSignInResponse, Error]:
         """Authenticates using a secret key and returns the sign-in response."""
-        url = sk_signing_endpoint()
+        url = sk_signing_endpoint(self.__options.base_url)
 
         headers = {"Content-Type": "application/json"}
         payload = {"secret_key": sk}

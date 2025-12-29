@@ -33,7 +33,6 @@ from tilt.types import (
     Option,
     Result,
     Some,
-    is_ok,
     is_some,
     unwrap_or,
 )
@@ -65,9 +64,11 @@ class Tilt:
 
         atexit.register(self.close)
 
-        if self.__options.data_src is None or self.__options.program_id is None:
+        if (
+            self.__options.data_src is None and self.__options.data is None
+        ) or self.__options.program_id is None:
             raise ValueError(
-                "Both data_src and program_id must be provided either directly or through options"
+                "Either data_src or data must be provided, and program_id is required"
             )
 
         match self.__options.secret_key:
@@ -204,6 +205,7 @@ class Tilt:
                     job_id,
                     task_id,
                     auth_token=unwrap_or(self.__options.auth_token, ""),
+                    base_url=self.__options.base_url,
                 )
                 return processed_data.download()
             except Exception:
@@ -304,11 +306,16 @@ class Tilt:
             A sorted list of tuples containing (index, processed_data).
         """
 
-        data = self.__options.data_src.jsonl_to_bytes_list()
+        if is_some(self.__options.data):
+            data = self.__options.data.value
+        elif is_some(self.__options.data_src):
+            data = self.__options.data_src.value.jsonl_to_bytes_list()
+        else:
+            raise ValueError("No data provided")
         job_result = self.create_job(Some(job_name))
         match job_result:
             case Ok(job):
-                job = job
+                pass
             case Err(_err):
                 raise
 
@@ -336,8 +343,8 @@ class Tilt:
 
                 try:
                     res = self._process_chunk(job_id, idx, chunk, statuses)
-                    if is_ok(res):
-                        val = res.value
+                    if res.is_ok():
+                        val = res.unwrap()
                         result_queue.put((idx, Some(val)))
                     else:
                         result_queue.put((idx, None))

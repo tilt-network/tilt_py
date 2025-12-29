@@ -1,38 +1,37 @@
-import os
 from uuid import UUID
 
-API_BASE_URL = os.getenv("API_BASE_URL", "https://staging.tilt.rest")
+
+def programs_endpoint(base_url):
+    return f"{base_url}/programs"
 
 
-def programs_endpoint():
-    return f"{API_BASE_URL}/programs"
-
-
-def status_polling_endpoint(task_id: UUID):
-    return f"{API_BASE_URL}/processed_data_status/{task_id}"
+def status_polling_endpoint(base_url, task_id: UUID):
+    return f"{base_url}/processed_data_status/{task_id}"
 
 
 def download_processed_data_endpoint(
-    organization_id: UUID, job_id: UUID, task_id: UUID
+    base_url, organization_id: UUID, job_id: UUID, task_id: UUID
 ):
-    return f"{API_BASE_URL}/processed_data/{organization_id}/{job_id}/processed/{task_id}.dat"
+    return (
+        f"{base_url}/processed_data/{organization_id}/{job_id}/processed/{task_id}.dat"
+    )
 
 
-def sse_endpoint(program_id: UUID):
-    return f"{API_BASE_URL}/sse/{program_id}"
+def sse_endpoint(base_url, program_id: UUID):
+    return f"{base_url}/sse/{program_id}"
 
 
-def jobs_endpoint():
-    return f"{API_BASE_URL}/jobs"
+def jobs_endpoint(base_url):
+    return f"{base_url}/jobs"
 
 
-def tasks_endpoint():
-    return f"{API_BASE_URL}/tasks"
+def tasks_endpoint(base_url):
+    return f"{base_url}/tasks"
 
 
-def sk_signing_endpoint():
-    return f"{API_BASE_URL}/sign_in/api_key"
+def sk_signing_endpoint(base_url):
+    return f"{base_url}/sign_in/api_key"
 
 
-def run_task_endpoint():
-    return f"{API_BASE_URL}/tasks/run"
+def run_task_endpoint(base_url):
+    return f"{base_url}/tasks/run"
